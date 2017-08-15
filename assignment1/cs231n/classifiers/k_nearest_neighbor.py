@@ -73,7 +73,8 @@ class KNearestNeighbor(object):
         # training point, and store the result in dists[i, j]. You should   #
         # not use a loop over dimension.                                    #
         #####################################################################
-        pass
+        # pass
+        dists[i, j] = np.sqrt(np.sum((X[i] - self.X_train[j])**2))
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -86,16 +87,19 @@ class KNearestNeighbor(object):
 
     Input / Output: Same as compute_distances_two_loops
     """
+
     num_test = X.shape[0]
     num_train = self.X_train.shape[0]
     dists = np.zeros((num_test, num_train))
+    squares = np.zeros((num_test, num_train))
     for i in xrange(num_test):
       #######################################################################
       # TODO:                                                               #
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      pass
+      # pass
+      dists[i] = np.sqrt(np.sum((self.X_train - X[i])**2, 1))
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -123,7 +127,14 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    # pass
+    # dists = np.sqrt((np.square(self.X_train[:,np.newaxis]-X).sum(axis=2))) # gives memory error
+
+    # (a - b)^2 = a^2 - 2ab + b^2
+    aSumSquare = np.sum(np.square(self.X_train),axis=1);
+    bSumSquare = np.sum(np.square(X),axis=1);
+    mul = np.dot(X, self.X_train.T);
+    dists = np.sqrt(bSumSquare[:,np.newaxis]+aSumSquare-2*mul)
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
@@ -147,7 +158,8 @@ class KNearestNeighbor(object):
     for i in xrange(num_test):
       # A list of length k storing the labels of the k nearest neighbors to
       # the ith test point.
-      closest_y = []
+      # closest_y = []
+
       #########################################################################
       # TODO:                                                                 #
       # Use the distance matrix to find the k nearest neighbors of the ith    #
@@ -155,7 +167,8 @@ class KNearestNeighbor(object):
       # neighbors. Store these labels in closest_y.                           #
       # Hint: Look up the function numpy.argsort.                             #
       #########################################################################
-      pass
+      # pass
+      closest_y = self.y_train[np.argsort(dists[i])[:k]]
       #########################################################################
       # TODO:                                                                 #
       # Now that you have found the labels of the k nearest neighbors, you    #
@@ -163,7 +176,14 @@ class KNearestNeighbor(object):
       # Store this label in y_pred[i]. Break ties by choosing the smaller     #
       # label.                                                                #
       #########################################################################
-      pass
+      # pass
+
+      from operator import itemgetter
+      
+      labels, counts = np.unique(closest_y, return_counts=True)
+      sorted_by_count_desc = sorted(list(zip(labels, counts)), key = itemgetter(1), reverse=True)
+      y_pred[i] = sorted_by_count_desc[0][0]
+
       #########################################################################
       #                           END OF YOUR CODE                            # 
       #########################################################################
